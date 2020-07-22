@@ -33,18 +33,36 @@ def union(tocrawl,all_links):
 		if url not in tocrawl:
 			tocrawl.append(url)
 
+def add_to_index(index,keyword,url):
+	if keyword not in index:
+		index[keyword]=[url]
+	else:
+		index[keyword].append(url)
+
+def add_content_to_index(index,content,url):
+	keywords_list=content.split()
+	for keyword in keywords_list:
+		add_to_index(index,keyword,url)
+
+def lookup(keyword,index):
+	if keyword in index:
+		return index[keyword]
+	else:
+		return None
+
 def crawl_web(seed):
 	tocrawl=[seed]
 	crawled=[]
+	index={}
 	while tocrawl:
 		link=tocrawl.pop()
 		if link not in crawled:
 			content=get_page(link)
+			add_content_to_index(index,content,link)
 			all_links=get_all_links(content)
 			union(tocrawl,all_links)
 			crawled.append(link)
 	return crawled
 
-seed='https://xkcd.com/353/'			#initializing a string of url
-					#calling get_page(seed) to get the content of the page 
-print(crawl_web(seed))					#printing the output of the function get_all_links(page)
+seed='https://xkcd.com/353/'			
+print(crawl_web(seed))					
