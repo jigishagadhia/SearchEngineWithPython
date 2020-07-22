@@ -8,8 +8,8 @@ def get_page(url):				#For a given url(link - eg: 'https://google.com')
         return ""			#If not able to retrieve content, returns an empty string
 
 def get_a_link(page):				#for a given link,returns the first link present on the page
-	page=str(page)					#converts the input from 'bytes'(huge data) to 'string'
-	start_link=page.find("<a href=")			#finds the indext of 1st occurence of "<a href="(HTML notation for link)
+	page=str(page)						#converts the input from 'bytes'(huge data) to 'string'
+	start_link=page.find("<a href=")			#finds the indext of 1st occurence of "<a href="(HTML notation for link)			
 	if start_link==-1:					#<string>.find(<substring>) returns -1 if no occurence found
 		return None,0					# if "<a href=" is not present in the page, return None
 	start_quote=page.find('"',start_link)				#find the first ' " ' occurence after "<a href=" =>start_quote
@@ -28,9 +28,9 @@ def get_all_links(page):				#for a given link, returns all the urls present on t
 			break
 	return all_links				#retrun the list of links on the given page
 
-def union(tocrawl,all_links):
+def union(tocrawl,crawled,all_links):
 	for url in all_links:
-		if url not in tocrawl:
+		if url and url not in tocrawl and url not in crawled:
 			tocrawl.append(url)
 
 def add_to_index(index,keyword,url):
@@ -47,22 +47,45 @@ def add_content_to_index(index,content,url):
 def lookup(keyword,index):
 	if keyword in index:
 		return index[keyword]
-	else:
-		return None
+	return None
 
 def crawl_web(seed):
 	tocrawl=[seed]
 	crawled=[]
 	index={}
+	graph={}
 	while tocrawl:
 		link=tocrawl.pop()
-		if link not in crawled:
+		print(len(tocrawl),link)
+		if link and link not in crawled:
+			crawled.append(link)
 			content=get_page(link)
 			add_content_to_index(index,content,link)
-			all_links=get_all_links(content)
-			union(tocrawl,all_links)
-			crawled.append(link)
-	return crawled
+			outlinks=get_all_links(content)
+			if outlinks:
+				graph[link]=outlinks 
+			union(tocrawl,crawled,outlinks)
+	return index, graph
 
-seed='https://xkcd.com/353/'			
-print(crawl_web(seed))					
+def computing_ranks(graph):
+	d=0.8
+	no_of_pages=len(graph)
+	ranks={}
+	for url in graph:
+		ranks[url]=1/no_of_pages
+	for i in range(0,10):
+		newranks={}
+		for url in graph:
+			newrank=(1-d)/no_of_pages
+			for node in graph:
+				if url in graph[node]:
+					newrank+=d*(rank[node]/len(graph[node]))
+			newranks[url]=newrank
+		ranks=newranks
+	return ranks
+
+seed='https://en.wikipedia.org/wiki/Friends'			
+page=get_page(seed)
+print(get_all_links(page))
+index,graph=crawl_web(seed)
+#print(computing_ranks(graph))
