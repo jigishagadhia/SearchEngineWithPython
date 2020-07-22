@@ -23,11 +23,28 @@ def get_all_links(page):				#for a given link, returns all the urls present on t
 		link,endpos=get_a_link(page)				#calling get_a_link(page) and storing the output of the function
 		if link:							#if the function returns a valid url:
 			all_links.append(link)					#add the url to the existing list of urls
-			page=page[endpos+1:]			#update the current content of the page - start from the end_quote till the end of page
+			page=page[endpos:]			#update the current content of the page - start from the end_quote till the end of page
 		else:						#If there is no link on the page, break the loop 
 			break
-	return get_all_links				#retru nthe list of links on the given page
+	return all_links				#retrun the list of links on the given page
 
-seed='https://www.wikipedia.org/'			#initializing a string of url
-page=get_page(seed)						#calling get_page(seed) to get the content of the page 
-print(get_all_links(page))					#printing the output of the function get_all_links(page)
+def union(tocrawl,all_links):
+	for url in all_links:
+		if url not in tocrawl:
+			tocrawl.append(url)
+
+def crawl_web(seed):
+	tocrawl=[seed]
+	crawled=[]
+	while tocrawl:
+		link=tocrawl.pop()
+		if link not in crawled:
+			content=get_page(link)
+			all_links=get_all_links(content)
+			union(tocrawl,all_links)
+			crawled.append(link)
+	return crawled
+
+seed='https://xkcd.com/353/'			#initializing a string of url
+					#calling get_page(seed) to get the content of the page 
+print(crawl_web(seed))					#printing the output of the function get_all_links(page)
